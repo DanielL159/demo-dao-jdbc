@@ -98,36 +98,40 @@ public class SellerDaoJdbc implements SellerDao{
 	@Override
 	public List<Seller> findByDepartment(Department department) {
 		PreparedStatement st = null;
-		ResultSet rs =  null;
-		
+		ResultSet rs = null;
 		try {
-			
 			st = conn.prepareStatement(
 					"SELECT seller.*,department.Name as DepName "
 					+ "FROM seller INNER JOIN department "
 					+ "ON seller.DepartmentId = department.Id "
 					+ "WHERE DepartmentId = ? "
-					+ "ORDER BY Name ");
+					+ "ORDER BY Name");
+			
 			st.setInt(1, department.getId());
+			
 			rs = st.executeQuery();
 			
-			List<Seller> list = new ArrayList<Seller>();
-			Map<Integer, Department> map = new HashMap<Integer, Department>();
+			List<Seller> list = new ArrayList<>();
+			Map<Integer, Department> map = new HashMap<>();
 			
 			while (rs.next()) {
-				Department depInstance = map.get(rs.getInt("DepartmentId"));
-				if(depInstance == null) {
-					depInstance = instantiateDepartament(rs);
-					map.put(rs.getInt("DepartmentId"), depInstance);
+				
+				Department dep = map.get(rs.getInt("DepartmentId"));
+				
+				if (dep == null) {
+					dep = instantiateDepartament(rs);
+					map.put(rs.getInt("DepartmentId"), dep);
 				}
-				Seller seller = instantiateSeller(rs, depInstance);
-				list.add(seller);
+				
+				Seller obj = instantiateSeller(rs, dep);
+				list.add(obj);
 			}
 			return list;
-			
-		} catch (SQLException e) {
+		}
+		catch (SQLException e) {
 			throw new DbException(e.getMessage());
-		}finally {
+		}
+		finally {
 			DB.closeStatement(st);
 			DB.closeResultSet(rs);
 		}
